@@ -1,6 +1,6 @@
 class startGame extends Phaser.Scene{
     constructor() {
-        super()
+        super('start')
     }
     preload(){
         this.load.image('bg','assets/bg.png')

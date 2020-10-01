@@ -2,12 +2,16 @@ class playGame extends Phaser.Scene{
     constructor() {
         super('play')
         this.score=0;
+        this.isAlive=true;
+        this.gameOVer=false;
     }
 
  preload() {
     this.load.image('bg', 'assets/bg.png')
     this.load.image('bird','assets/bird.png')
     this.load.image('pipe','assets/pipe.png')
+    this.load.audio('wing','assets/wing.mp3')
+    this.load.audio('hit','assets/hit.mp3')
 }
 
  create() {
@@ -18,115 +22,68 @@ class playGame extends Phaser.Scene{
     this.bird.body.gravity.y=2500;
     this.cursors = this.input.keyboard.createCursorKeys();
     this.input.on('pointerdown', this.fly, this);
-   // this.add.image(300,600,'pipe').setScale(0.7)
-    //  this.pipes= this.physics.add.group({
-    //      key: 'pipe',
-    //      repeat: 4,
-    //      setXY: {
-    //          x: 300,
-    //          y: 300,
-    //          stepX: Phaser.Math.Between(20, config.width - 20),
-    //          stepY: Phaser.Math.Between(15, 300),
-    //      },
-    //      setScale: { x: 0.02, y: 0.02 }
-    //  })
-    // this.setObjectVelocity(this.bomb);
-
-     this.pipes=this.physics.add.group();
-     let x=700;
-     for(let i=0;i<100;i++){
+    this.scoreText=this.add.text(15,15,'Score: 0',{fontSize:32,fill:'#fff'})
+    this.wing=this.sound.add('wing')
+    this.hit=this.sound.add('hit')
+    this.pipes=this.physics.add.group();
+    this.X=700;
+    for(let i=0;i<100;i++){
          let gapX=Phaser.Math.Between(250,450);
-         let gap=Phaser.Math.Between(130,200);
+         //let gap=Phaser.Math.Between(150,200);
+         let gap=300;
          let upY=Phaser.Math.Between(-150,100);
-         let pipeUp=this.pipes.create(x,upY,'pipe').setRotation(3.14).setScale(0.7)
-         let pipeDown=this.pipes.create(x,upY+gap+600,'pipe').setScale(0.7)
-         x+=gapX;
-     }
-     this.setObjectVelocity(this.pipes)
-     this.physics.add.overlap(this.pipes,this.bird,this.endGame,null,this)
-    // this.anims.create({
-    //     key:'explode',
-    //     frames:this.anims.generateFrameNumbers('explosion'),
-    //     frameRate:20,
-    //     hideOnComplete:true
-    // })
-    // this.gunShot=this.sound.add('gun-shot')
-    // this.coinhit=this.sound.add('coinhit')
-    // this.end=this.sound.add('end')
-    // this.physics.add.collider(this.jet,this.stars,this.collectStars,null,this)
-    // this.physics.add.collider(this.jet,this.bomb,this.endGame,null,this)
-    // this.scoreText=this.add.text(15,15,'Score: 0',{fontSize:32,fill:'#0f0'})
+         let pipeUp=this.pipes.create(this.X,upY-50,'pipe').setRotation(3.14).setScale(0.7)
+         let pipeDown=this.pipes.create(this.X,upY+gap+500,'pipe').setScale(0.7)
+         this.X+=gapX;
+    }
+    this.setObjectVelocity(this.pipes)
+    this.physics.add.overlap(this.pipes,this.bird,this.endGame,null,this)
 }
 endGame(pipes,bird){
-    //this.physics.pause();
-    this.bird.setTint(0xff0000)
-    this.gameOver=true;
+    this.hit.play()
+    if (this.isAlive == false)
+        return;
+    this.bird.setVelocity(0,600);
+    this.isAlive=false;
+    this.bird.setTint(0xff0000);
 }
-//  collectStars(jet,stars){
-//     this.coinhit.play();
-//     stars.disableBody(true,true)
-//     let x=Phaser.Math.Between(20,config.width-20);
-//     stars.enableBody(true,x,0,true,true)
-//     let xVel=Phaser.Math.Between(-100,100);
-//     let yVel=Phaser.Math.Between(80,120);
-//     this.stars.setVelocity(xVel,yVel);
-//     this.score+=10;
-//     this.scoreText.setText('Score: '+this.score)
-// }
 
  setObjectVelocity(pipes){
     pipes.children.iterate(function(pipe){
         pipe.setVelocity(-110,0);
     })
 }
-  fly() {
+ fly() {
+      if(this.isAlive==true){
         this.bird.setVelocity(0,-600);
-    }
-
-//  destroyBomb(ammo, bomb) {
-//     this.gunShot.play()
-//     this.explosion=this.add.sprite(bomb.x,bomb.y,'explosion').setScale(3);
-//     this.explosion.play('explode')
-//     bomb.disableBody(true, true)
-//     ammo.disableBody(true, true)
-//     let x=Phaser.Math.Between(20,config.width-20);
-//     bomb.enableBody(true,x,0,true,true)
-//     let xVel=Phaser.Math.Between(-100,100);
-//     let yVel=Phaser.Math.Between(100,150);
-//     bomb.setVelocity(xVel,yVel);
-//     this.score+=20;
-//     this.scoreText.setText('Score: '+this.score)
-// }
-// endGame(jet,bomb){
-//     this.physics.pause();
-//     this.jet.setTint(0xff0000)
-//     this.explosion=this.add.sprite(jet.x,jet.y,'this.').setScale(6);
-//     this.explosion.play('explode')
-//     this.gameOver=true;
-//     this.end.play()
-// }
+      }
+    this.bird.angle=-20;
+    this.wing.play();
+ }
   update() {
-    if(this.gameOver){
+    if(this.gameOver==true){
         this.scene.start('end',{totalScore:this.score});
+    }   
+    if(((this.bird.y>600)&&(this.isAlive==false))||(this.bird.y>700)){
+        this.gameOver=true;
     }
+        if(this.isAlive==true)
         this.bg.tilePositionX+=3;
-//     if (this.cursors.left.isDown) {
-//         this.jet.setVelocityX(-150);
-//     } else if (this.cursors.right.isDown) {
-//         this.jet.setVelocityX(+150);
-//     } else {
-//         this.jet.setVelocityX(0);
-//     }
-
-//     if (this.cursors.up.isDown) {
-//         this.jet.setVelocityY(-150);
-//     } else if (this.cursors.down.isDown) {
-//         this.jet.setVelocityY(+150);
-//     } else {
-//         this.jet.setVelocityY(0);
-//     }
-//     this.checkForRepos(this.bomb);
-//     this.checkForRepos(this.stars);
+        if (this.bird.angle < 20)
+            this.bird.angle += 1; 
+         if(this.isAlive==false){
+            this.pipes.children.iterate(function(pipe){
+                pipe.setVelocity(0,0);
+            })
+        }
+        console.log(this.score)
+        let sc=this;
+        this.pipes.children.iterate(function(pipe){
+            if(pipe.x<300&&pipe.x>298){
+                sc.score+=1;
+                sc.scoreText.setText('Score: '+(sc.score/2))
+            }
+    })
  }
 
 
